@@ -1,0 +1,14 @@
+[package]
+name = "pinto"
+version = "0.1.0"
+authors = ["Jacob Budin <self@jacobbudin.com>"]
+description = "SQL query builder"
+repository = "https://github.com/jacobbudin/pinto"
+readme = "README.md"
+keywords = ["sql", "query"]
+license = "MIT"
+
+[badges]
+travis-ci = { repository = "jacobbudin/pinto" }
+
+[dependencies]
