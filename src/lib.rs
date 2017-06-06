@@ -30,6 +30,7 @@ pub mod query_builder {
     }
 
     impl<'a> Select<'a> {
+        /// Construct a new `SELECT` query builder
         pub fn new(table: &'a str) -> Self {
             let query_builder = Select {
                 table: table,
@@ -44,6 +45,7 @@ pub mod query_builder {
             query_builder
         }
 
+        /// Set a table alias (`AS`)
         pub fn alias(&mut self, table: &'a str, alias: &'a str) -> &mut Self {
             if self.aliases.is_none() {
                 self.aliases = Some(HashMap::new());
@@ -59,6 +61,7 @@ pub mod query_builder {
             self
         }
 
+        /// Specify desired table fields in result set
         pub fn fields(&mut self, fields: &[&'a str]) -> &mut Self {
             if self.fields.is_none() {
                 self.fields = Some(Vec::new());
@@ -76,6 +79,7 @@ pub mod query_builder {
             self 
         }
 
+        /// Filter result set based on conditions (`WHERE` clause)
         pub fn filter(&mut self, expr: &'a str) -> &mut Self {
             if self.conditions.is_none() {
                 self.conditions = Some(Vec::new());
@@ -91,6 +95,7 @@ pub mod query_builder {
             self 
         }
 
+        /// Order result set based on the value of an expression (`ORDER BY` clause)
         pub fn order_by(&mut self, expr: &'a str, direction: Order) -> &mut Self {
             if self.order.is_none() {
                 self.order = Some(Vec::new());
@@ -117,16 +122,19 @@ pub mod query_builder {
             self
         }
 
+        /// Limit number of rows in result set (`LIMIT`)
         pub fn limit(&mut self, limit: usize) -> &mut Self {
             self.limit = limit;
             self
         }
 
+        /// Offset number of rows in result set (`OFFSET`)
         pub fn offset(&mut self, offset: usize) -> &mut Self {
             self.offset = offset;
             self
         }
 
+        /// Generate SQL query (`String`) from subsequent method calls
         pub fn build(&self) -> String {
             let mut query = String::from("SELECT ");
 
@@ -179,6 +187,7 @@ pub mod query_builder {
         }
     }
 
+    /// Helper function to construct new `SELECT` query builder
     pub fn select(table: &str) -> Select {
         Select::new(table)
     }
