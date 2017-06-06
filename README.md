@@ -33,6 +33,7 @@ assert_eq!("SELECT id, name FROM users WHERE name = $1 ORDER BY id ASC;", query)
 ### Statements
 
 - `SELECT`
+	- Table alias (`AS`)
 	- Field selection
 	- `WHERE` clause
 	- `ORDER BY` clause
@@ -41,7 +42,6 @@ assert_eq!("SELECT id, name FROM users WHERE name = $1 ORDER BY id ASC;", query)
 ## Roadmap
 
 - Table joins
-- Table aliases
 
 ## License
 

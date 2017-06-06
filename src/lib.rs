@@ -51,7 +51,7 @@ pub mod query_builder {
 
             match self.aliases {
                 Some(ref mut aliases) => {
-                    aliases.insert(alias, table);
+                    aliases.insert(table, alias);
                 },
                 None => unreachable!(),
             }
@@ -140,6 +140,13 @@ pub mod query_builder {
             query += " FROM ";
             query += self.table;
 
+            if let Some(ref aliases) = self.aliases {
+                if let Some(ref alias) = aliases.get(self.table) {
+                    query += " AS ";
+                    query += *alias;
+                }
+            }
+
             if let Some(ref conditions) = self.conditions {
                 query += " WHERE ";
                 query += join(conditions, " AND ").as_str();
@@ -194,6 +201,15 @@ mod tests {
             .fields(&["id", "name"])
             .build();
         assert_eq!("SELECT id, name FROM users;", query);
+    }
+
+    #[test]
+    fn test_select_query_with_alias() {
+        let query = query_builder::select("users")
+            .alias("users", "u")
+            .fields(&["id", "name"])
+            .build();
+        assert_eq!("SELECT id, name FROM users AS u;", query);
     }
  
     #[test]
