@@ -1,5 +1,6 @@
 # Pinto
 
+[![](https://img.shields.io/crates/v/pinto.svg)][crate]
 [![](https://travis-ci.org/jacobbudin/pinto.svg?branch=master)][travis-ci]
 
 Pinto is a small, easy-to-use library for constructing SQL queries programmatically in [Rust](https://www.rust-lang.org).
@@ -47,4 +48,5 @@ assert_eq!("SELECT id, name FROM users WHERE name = $1 ORDER BY id ASC;", query)
 
 MIT
 
+[crate]: https://crates.io/crates/pinto
 [travis-ci]: https://travis-ci.org/jacobbudin/pinto
