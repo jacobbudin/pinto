@@ -2,6 +2,12 @@
 pub mod query_builder {
     use std::collections::HashMap;
 
+    /// `DELETE`
+    pub struct Delete<'a> {
+        table: &'a str,
+        conditions: Option<Vec<&'a str>>,
+    }
+
     /// `SELECT`
     pub struct Select<'a> {
         table: &'a str,
@@ -28,6 +34,50 @@ pub mod query_builder {
         }
         s
     }
+
+    impl<'a> Delete<'a> {
+        /// Construct a new `DELETE` query builder
+        pub fn new(table: &'a str) -> Self {
+            let query_builder = Delete {
+                table: table,
+                conditions: None,
+            };
+
+            query_builder
+        }
+
+        /// Filter result set based on conditions (`WHERE` clause)
+        pub fn filter(&mut self, expr: &'a str) -> &mut Self {
+            if self.conditions.is_none() {
+                self.conditions = Some(Vec::new());
+            }
+
+            match self.conditions {
+                Some(ref mut current_conditions) => {
+                    current_conditions.push(expr);
+                },
+                None => unreachable!(),
+            }
+
+            self
+        }
+
+
+        /// Generate SQL query (`String`) from subsequent method calls
+        pub fn build(&self) -> String {
+            let mut query = String::from("DELETE FROM ");
+            query += self.table;
+
+            if let Some(ref conditions) = self.conditions {
+                query += " WHERE ";
+                query += join(conditions, " AND ").as_str();
+            }
+
+            query += ";";
+            query
+        }
+    }
+
 
     impl<'a> Select<'a> {
         /// Construct a new `SELECT` query builder
@@ -92,7 +142,7 @@ pub mod query_builder {
                 None => unreachable!(),
             }
 
-            self 
+            self
         }
 
         /// Order result set based on the value of an expression (`ORDER BY` clause)
@@ -187,6 +237,11 @@ pub mod query_builder {
         }
     }
 
+    /// Helper function to construct new `DELETE` query builder
+    pub fn delete(table: &str) -> Delete {
+        Delete::new(table)
+    }
+
     /// Helper function to construct new `SELECT` query builder
     pub fn select(table: &str) -> Select {
         Select::new(table)
@@ -196,6 +251,22 @@ pub mod query_builder {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_delete_query() {
+        let query = query_builder::delete("users")
+            .build();
+        assert_eq!("DELETE FROM users;", query);
+    }
+
+    #[test]
+    fn test_delete_query_with_conditions() {
+        let query = query_builder::delete("users")
+            .filter("name = $1")
+            .filter("karma <= $2")
+            .build();
+        assert_eq!("DELETE FROM users WHERE name = $1 AND karma <= $2;", query);
+    }
 
     #[test]
     fn test_select_query() {
