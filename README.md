@@ -15,7 +15,7 @@ Add `pinto` as a dependency:
 
 ```toml
 [dependencies]
-pinto = "0.1"
+pinto = "0.2"
 ```
 
 ## Example
