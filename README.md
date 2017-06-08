@@ -55,6 +55,10 @@ See included tests for additional examples.
 - `SELECT`
 	- Table joins
 
+## Documentation
+
+- [API documentation](https://docs.rs/pinto)
+
 ## License
 
 MIT
