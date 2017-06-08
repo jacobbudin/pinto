@@ -1,6 +1,6 @@
 [package]
 name = "pinto"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Jacob Budin <self@jacobbudin.com>"]
 description = "SQL query builder"
 repository = "https://github.com/jacobbudin/pinto"
