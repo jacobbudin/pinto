@@ -29,18 +29,23 @@ let query = query_builder::select("users")
 assert_eq!("SELECT id, name FROM users WHERE name = $1 ORDER BY id ASC;", query);
 ```
 
+See included tests for additional examples.
+
 ## Features
 
 ### Statements
 
 - `DELETE`
 	- `WHERE` clause
+- `INSERT`
 - `SELECT`
 	- Table alias (`AS`)
 	- Field selection
 	- `WHERE` clause
 	- `ORDER BY` clause
 	- `LIMIT` and `OFFSET` clause
+- `UPDATE`
+	- `WHERE` clause
 
 ## Roadmap
 

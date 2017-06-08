@@ -8,6 +8,12 @@ pub mod query_builder {
         conditions: Option<Vec<&'a str>>,
     }
 
+    /// `INSERT`
+    pub struct Insert<'a> {
+        table: &'a str,
+        values: HashMap<&'a str, &'a str>,
+    }
+
     /// `SELECT`
     pub struct Select<'a> {
         table: &'a str,
@@ -17,6 +23,13 @@ pub mod query_builder {
         conditions: Option<Vec<&'a str>>,
         limit: usize,
         offset: usize,
+    }
+
+    /// `UPDATE`
+    pub struct Update<'a> {
+        table: &'a str,
+        values: HashMap<&'a str, &'a str>,
+        conditions: Option<Vec<&'a str>>,
     }
 
     /// The direction of an `ORDER` clause's expression
@@ -78,6 +91,44 @@ pub mod query_builder {
         }
     }
 
+    impl<'a> Insert<'a> {
+        /// Construct a new `INSERT` query builder
+        pub fn new(table: &'a str) -> Self {
+            let query_builder = Insert {
+                table: table,
+                values: HashMap::new(),
+            };
+
+            query_builder
+        }
+
+        /// Set a field value
+        pub fn set(&mut self, field: &'a str, value: &'a str) -> &mut Self {
+            let _ = self.values.insert(field, value);
+            self
+        }
+
+        /// Generate SQL query (`String`) from subsequent method calls
+        pub fn build(&self) -> String {
+            let mut query = String::from("INSERT INTO ");
+            query += self.table;
+
+            let mut columns: Vec<&str> = Vec::new();
+            let mut values: Vec<&str> = Vec::new();
+
+            for (field, value) in self.values.iter() {
+                columns.push(field);
+                values.push(value);
+            }
+
+            query += " (";
+            query += join(&columns, ", ").as_str();
+            query += ") VALUES (";
+            query += join(&values, ", ").as_str();
+            query += ");";
+            query
+        }
+    }
 
     impl<'a> Select<'a> {
         /// Construct a new `SELECT` query builder
@@ -237,14 +288,84 @@ pub mod query_builder {
         }
     }
 
+    impl<'a> Update<'a> {
+        /// Construct a new `UPDATE` query builder
+        pub fn new(table: &'a str) -> Self {
+            let query_builder = Update {
+                table: table,
+                values: HashMap::new(),
+                conditions: None,
+            };
+
+            query_builder
+        }
+
+        /// Set a field value
+        pub fn set(&mut self, field: &'a str, value: &'a str) -> &mut Self {
+            let _ = self.values.insert(field, value);
+            self
+        }
+
+        /// Filter result set based on conditions (`WHERE` clause)
+        pub fn filter(&mut self, expr: &'a str) -> &mut Self {
+            if self.conditions.is_none() {
+                self.conditions = Some(Vec::new());
+            }
+
+            match self.conditions {
+                Some(ref mut current_conditions) => {
+                    current_conditions.push(expr);
+                },
+                None => unreachable!(),
+            }
+
+            self
+        }
+
+        /// Generate SQL query (`String`) from subsequent method calls
+        pub fn build(&self) -> String {
+            let mut query = String::from("UPDATE ");
+            query += self.table;
+
+            let assignments: Vec<String>;
+            assignments = self.values.iter().map(|(&field, &value)| {
+                let mut assignment = String::from(field);
+                assignment += " = ";
+                assignment += value;
+                assignment
+            }).collect();
+
+            query += " SET ";
+            query += assignments.join(" AND ").as_str();
+
+            if let Some(ref conditions) = self.conditions {
+                query += " WHERE ";
+                query += join(conditions, " AND ").as_str();
+            }
+
+            query += ";";
+            query
+        }
+    }
+
     /// Helper function to construct new `DELETE` query builder
     pub fn delete(table: &str) -> Delete {
         Delete::new(table)
     }
 
+    /// Helper function to construct new `INSERT` query builder
+    pub fn insert(table: &str) -> Insert {
+        Insert::new(table)
+    }
+
     /// Helper function to construct new `SELECT` query builder
     pub fn select(table: &str) -> Select {
         Select::new(table)
+    }
+
+    /// Helper function to construct new `UPDATE` query builder
+    pub fn update(table: &str) -> Update {
+        Update::new(table)
     }
 }
 
@@ -266,6 +387,17 @@ mod tests {
             .filter("karma <= $2")
             .build();
         assert_eq!("DELETE FROM users WHERE name = $1 AND karma <= $2;", query);
+    }
+
+    #[test]
+    fn test_insert_query() {
+        let query = query_builder::insert("users")
+            .set("name", "$1")
+            .set("karma", "$2")
+            .build();
+        let possibility1 = "INSERT INTO users (name, karma) VALUES ($1, $2);" == query;
+        let possibility2 = "INSERT INTO users (karma, name) VALUES ($2, $1);" == query;
+        assert!(possibility1 || possibility2);
     }
 
     #[test]
@@ -329,5 +461,26 @@ mod tests {
             .order_by("id", query_builder::Order::Asc)
             .build();
         assert_eq!("SELECT id, name FROM users WHERE name = $1 ORDER BY id ASC;", query);
+    }
+
+    #[test]
+    fn test_update_query() {
+        let query = query_builder::update("users")
+            .set("karma", "0")
+            .set("last_login", "1970-01-01")
+            .build();
+        let possibility1 = "UPDATE users SET karma = 0 AND last_login = 1970-01-01;" == query;
+        let possibility2 = "UPDATE users SET last_login = 1970-01-01 AND karma = 0;" == query;
+        assert!(possibility1 || possibility2);
+    }
+
+    #[test]
+    fn test_update_query_with_conditions() {
+        let query = query_builder::update("users")
+            .set("karma", "0")
+            .filter("name = $1")
+            .filter("last_login < $2")
+            .build();
+        assert_eq!("UPDATE users SET karma = 0 WHERE name = $1 AND last_login < $2;", query);
     }
 }
