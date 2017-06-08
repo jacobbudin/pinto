@@ -5,13 +5,15 @@
 
 Pinto is a small, easy-to-use library for constructing SQL queries programmatically in [Rust](https://www.rust-lang.org).
 
-## Databases
+⚠️ This library does not provide query parameterization. Do not use raw user-supplied data in your queries. If inputs are not properly escaped, your software will be suspectible to [SQL injection](https://en.wikipedia.org/wiki/SQL_injection) attacks.
+
+## Compatibility
 
 The library aims to generate queries compatible with [PostgreSQL](https://www.postgresql.org), [MySQL](https://www.mysql.com), and [SQLite](https://sqlite.org).
 
 ## Install
 
-Add `pinto` as a dependency:
+Add [`pinto`](https://crates.io/crates/pinto) as a dependency:
 
 ```toml
 [dependencies]
@@ -26,6 +28,7 @@ let query = query_builder::select("users")
     .filter("name = $1")
     .order_by("id", query_builder::Order::Asc)
     .build();
+
 assert_eq!("SELECT id, name FROM users WHERE name = $1 ORDER BY id ASC;", query);
 ```
 
