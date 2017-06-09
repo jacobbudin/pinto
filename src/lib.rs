@@ -20,6 +20,7 @@ pub mod query_builder {
         aliases: Option<HashMap<&'a str, &'a str>>,
         fields: Option<Vec<&'a str>>,
         order: Option<Vec<(&'a str, Order)>>,
+        joins: Option<Vec<JoinClause<'a>>>,
         conditions: Option<Vec<&'a str>>,
         limit: usize,
         offset: usize,
@@ -32,8 +33,19 @@ pub mod query_builder {
         conditions: Option<Vec<&'a str>>,
     }
 
+    /// A helper struct for `JOIN` clause
+    struct JoinClause<'a> {
+        table: &'a str,
+        on_left: &'a str,
+        on_right: &'a str,
+        kind: Join,
+    }
+
     /// The direction of an `ORDER` clause's expression
     pub enum Order { Asc, Desc }
+
+    /// The type of `JOIN` to perform
+    pub enum Join { Left, Inner }
 
     /// Combine a vector of `String`s, with the `sep` `str` between each value
     fn join(v: &Vec<&str>, sep: &str) -> String {
@@ -138,6 +150,7 @@ pub mod query_builder {
                 aliases: None,
                 fields: None,
                 order: None,
+                joins: None,
                 conditions: None,
                 limit: 0usize,
                 offset: 0usize,
@@ -177,7 +190,7 @@ pub mod query_builder {
                 None => unreachable!(),
             }
 
-            self 
+            self
         }
 
         /// Filter result set based on conditions (`WHERE` clause)
@@ -213,13 +226,24 @@ pub mod query_builder {
             self 
         }
 
-        #[allow(unused_variables)]
-        pub fn inner_join(&mut self, table: &str, on_left: &str, on_right: &str) -> &mut Self {
-            self
-        }
+        pub fn join(&mut self, table: &'a str, on_left: &'a str, on_right: &'a str, kind: Join) -> &mut Self {
+            if self.joins.is_none() {
+                self.joins = Some(Vec::new());
+            }
 
-        #[allow(unused_variables)]
-        pub fn left_join(&mut self, table: &str, on_left: &str, on_right: &str) -> &mut Self {
+            match self.joins {
+                Some(ref mut current_joins) => {
+                    let join = JoinClause {
+                        table: table,
+                        on_left: on_left,
+                        on_right: on_right,
+                        kind: kind,
+                    };
+                    current_joins.push(join);
+                },
+                None => unreachable!(),
+            }
+
             self
         }
 
@@ -253,6 +277,30 @@ pub mod query_builder {
                 if let Some(ref alias) = aliases.get(self.table) {
                     query += " AS ";
                     query += *alias;
+                }
+            }
+
+            if let Some(ref joins) = self.joins {
+                for join in joins.iter() {
+                    match join.kind {
+                        Join::Left => query += " LEFT",
+                        Join::Inner => query += " INNER",
+                    }
+
+                    query += " JOIN ";
+                    query += join.table;
+
+                    if let Some(ref aliases) = self.aliases {
+                        if let Some(ref alias) = aliases.get(join.table) {
+                            query += " AS ";
+                            query += *alias;
+                        }
+                    }
+
+                    query += " ON ";
+                    query += join.on_left;
+                    query += " = ";
+                    query += join.on_right;
                 }
             }
 
@@ -461,6 +509,17 @@ mod tests {
             .order_by("id", query_builder::Order::Asc)
             .build();
         assert_eq!("SELECT id, name FROM users WHERE name = $1 ORDER BY id ASC;", query);
+    }
+
+    #[test]
+    fn test_select_query_with_join() {
+        let query = query_builder::select("users")
+            .fields(&["id", "name"])
+            .filter("name = $1")
+            .alias("posts", "p")
+            .join("posts", "p.user_id", "users.id", query_builder::Join::Left)
+            .build();
+        assert_eq!("SELECT id, name FROM users LEFT JOIN posts AS p ON p.user_id = users.id WHERE name = $1;", query);
     }
 
     #[test]
