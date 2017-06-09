@@ -53,6 +53,7 @@ See included tests for additional examples.
 
 ## Documentation
 
+- ["First Steps"](https://github.com/jacobbudin/pinto/wiki/First-Steps) (recommended for beginners)
 - [API documentation](https://docs.rs/pinto)
 
 ## License
