@@ -44,16 +44,12 @@ See included tests for additional examples.
 - `SELECT`
 	- Table alias (`AS`)
 	- Field selection
+	- `JOIN` clause
 	- `WHERE` clause
 	- `ORDER BY` clause
 	- `LIMIT` and `OFFSET` clause
 - `UPDATE`
 	- `WHERE` clause
-
-## Roadmap
-
-- `SELECT`
-	- Table joins
 
 ## Documentation
 
