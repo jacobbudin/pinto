@@ -46,6 +46,8 @@ See included tests for additional examples.
 	- Field selection
 	- `JOIN` clause
 	- `WHERE` clause
+	- `GROUP BY` clause
+	- `HAVING` clause
 	- `ORDER BY` clause
 	- `LIMIT` and `OFFSET` clause
 - `UPDATE`
