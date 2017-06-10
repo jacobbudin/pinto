@@ -1,20 +1,24 @@
 /// A module to create SQL-based queries programmatically.
 pub mod query_builder {
     use std::collections::HashMap;
+    use std::fmt;
 
     /// `DELETE`
+    #[derive(Debug)]
     pub struct Delete<'a> {
         table: &'a str,
         conditions: Option<Vec<&'a str>>,
     }
 
     /// `INSERT`
+    #[derive(Debug)]
     pub struct Insert<'a> {
         table: &'a str,
         values: HashMap<&'a str, &'a str>,
     }
 
     /// `SELECT`
+    #[derive(Debug)]
     pub struct Select<'a> {
         table: &'a str,
         aliases: Option<HashMap<&'a str, &'a str>>,
@@ -27,6 +31,7 @@ pub mod query_builder {
     }
 
     /// `UPDATE`
+    #[derive(Debug)]
     pub struct Update<'a> {
         table: &'a str,
         values: HashMap<&'a str, &'a str>,
@@ -34,6 +39,7 @@ pub mod query_builder {
     }
 
     /// A helper struct for `JOIN` clause
+    #[derive(Debug)]
     struct JoinClause<'a> {
         table: &'a str,
         on_left: &'a str,
@@ -42,9 +48,11 @@ pub mod query_builder {
     }
 
     /// The direction of an `ORDER` clause's expression
+    #[derive(Debug)]
     pub enum Order { Asc, Desc }
 
     /// The type of `JOIN` to perform
+    #[derive(Debug)]
     pub enum Join { Left, Inner }
 
     /// Combine a vector of `String`s, with the `sep` `str` between each value
@@ -58,6 +66,30 @@ pub mod query_builder {
             }
         }
         s
+    }
+
+    impl<'a> fmt::Display for Delete<'a> {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{}", self.build())
+        }
+    }
+
+    impl<'a> fmt::Display for Insert<'a> {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{}", self.build())
+        }
+    }
+
+    impl<'a> fmt::Display for Select<'a> {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{}", self.build())
+        }
+    }
+
+    impl<'a> fmt::Display for Update<'a> {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{}", self.build())
+        }
     }
 
     impl<'a> Delete<'a> {
@@ -86,7 +118,6 @@ pub mod query_builder {
 
             self
         }
-
 
         /// Generate SQL query (`String`) from subsequent method calls
         pub fn build(&self) -> String {
@@ -419,7 +450,22 @@ pub mod query_builder {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::query_builder;
+
+    #[test]
+    fn test_debug() {
+        let query_builder = query_builder::select("users");
+        let query = format!("{:?}", query_builder);
+        assert_eq!("Select { table: \"users\", aliases: None, fields: None, order: None, \
+            joins: None, conditions: None, limit: 0, offset: 0 }", query);
+    }
+
+    #[test]
+    fn test_display() {
+        let query_builder = query_builder::select("users");
+        let query = format!("{}", query_builder);
+        assert_eq!("SELECT * FROM users;", query);
+    }
 
     #[test]
     fn test_delete_query() {
