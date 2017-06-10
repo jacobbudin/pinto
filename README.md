@@ -17,7 +17,7 @@ Add [`pinto`](https://crates.io/crates/pinto) as a dependency:
 
 ```toml
 [dependencies]
-pinto = "0.5"
+pinto = "0.6"
 ```
 
 ## Example
