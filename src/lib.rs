@@ -25,6 +25,8 @@ pub mod query_builder {
         fields: Option<Vec<&'a str>>,
         order: Option<Vec<(&'a str, Order)>>,
         joins: Option<Vec<JoinClause<'a>>>,
+        groupings: Option<Vec<&'a str>>,
+        havings: Option<Vec<&'a str>>,
         conditions: Option<Vec<&'a str>>,
         limit: usize,
         offset: usize,
@@ -183,6 +185,8 @@ pub mod query_builder {
                 order: None,
                 joins: None,
                 conditions: None,
+                groupings: None,
+                havings: None,
                 limit: 0usize,
                 offset: 0usize,
             };
@@ -233,6 +237,38 @@ pub mod query_builder {
             match self.conditions {
                 Some(ref mut current_conditions) => {
                     current_conditions.push(expr);
+                },
+                None => unreachable!(),
+            }
+
+            self
+        }
+
+        /// Group result set based on common value (`GROUP BY` clause)
+        pub fn group_by(&mut self, val: &'a str) -> &mut Self {
+            if self.groupings.is_none() {
+                self.groupings = Some(Vec::new());
+            }
+
+            match self.groupings {
+                Some(ref mut current_groupings) => {
+                    current_groupings.push(val);
+                },
+                None => unreachable!(),
+            }
+
+            self
+        }
+
+        /// Filter result set based on an expression on an aggregate value (`HAVING` clause)
+        pub fn having(&mut self, expr: &'a str) -> &mut Self {
+            if self.havings.is_none() {
+                self.havings = Some(Vec::new());
+            }
+
+            match self.havings {
+                Some(ref mut current_havings) => {
+                    current_havings.push(expr);
                 },
                 None => unreachable!(),
             }
@@ -338,6 +374,16 @@ pub mod query_builder {
             if let Some(ref conditions) = self.conditions {
                 query += " WHERE ";
                 query += join(conditions, " AND ").as_str();
+            }
+
+            if let Some(ref groupings) = self.groupings {
+                query += " GROUP BY ";
+                query += join(groupings, ", ").as_str();
+            }
+
+            if let Some(ref havings) = self.havings {
+                query += " HAVING ";
+                query += join(havings, " AND ").as_str();
             }
 
             if let Some(ref order) = self.order {
@@ -457,7 +503,7 @@ mod tests {
         let query_builder = query_builder::select("users");
         let query = format!("{:?}", query_builder);
         assert_eq!("Select { table: \"users\", aliases: None, fields: None, order: None, \
-            joins: None, conditions: None, limit: 0, offset: 0 }", query);
+            joins: None, groupings: None, havings: None, conditions: None, limit: 0, offset: 0 }", query);
     }
 
     #[test]
@@ -517,7 +563,7 @@ mod tests {
             .build();
         assert_eq!("SELECT id, name FROM users AS u;", query);
     }
- 
+
     #[test]
     fn test_select_query_with_limit() {
         let query = query_builder::select("users")
@@ -526,7 +572,7 @@ mod tests {
             .build();
         assert_eq!("SELECT id, name FROM users LIMIT 15;", query);
     }
- 
+
     #[test]
     fn test_select_query_with_offset() {
         let query = query_builder::select("users")
@@ -536,7 +582,17 @@ mod tests {
             .build();
         assert_eq!("SELECT id, name FROM users LIMIT 15, 30;", query);
     }
- 
+
+    #[test]
+    fn test_select_query_with_group() {
+        let query = query_builder::select("users")
+            .fields(&["id", "name", "MAX(karma) AS max"])
+            .group_by("name")
+            .having("max > 100")
+            .build();
+        assert_eq!("SELECT id, name, MAX(karma) AS max FROM users GROUP BY name HAVING max > 100;", query);
+    }
+
     #[test]
     fn test_select_query_with_conditions() {
         let query = query_builder::select("users")
@@ -546,7 +602,7 @@ mod tests {
             .build();
         assert_eq!("SELECT id, name FROM users WHERE id = $1 AND name = $2;", query);
     }
- 
+
     #[test]
     fn test_select_query_with_order() {
         let query = query_builder::select("users")
