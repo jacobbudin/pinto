@@ -58,6 +58,15 @@ See included tests for additional examples.
 - ["First Steps"](https://github.com/jacobbudin/pinto/wiki/First-Steps) (recommended for beginners)
 - [API documentation](https://docs.rs/pinto)
 
+## Design Philosophy
+
+Pinto aims to be:
+
+1. Easy-to-use — the library should be useful with a beginner's knowledge of Rust
+2. Simple — the library's API should follow common SQL terminology and should allow its users to write concise, readable implementations
+
+Other design goals, such as performance, are relevant but not foremost.
+
 ## License
 
 MIT
