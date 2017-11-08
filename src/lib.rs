@@ -404,7 +404,7 @@ pub mod query_builder {
             }
 
             if self.offset != 0 {
-                query += ", ";
+                query += " OFFSET ";
                 query += self.offset.to_string().as_str();
             }
 
@@ -580,7 +580,7 @@ mod tests {
             .limit(15)
             .offset(30)
             .build();
-        assert_eq!("SELECT id, name FROM users LIMIT 15, 30;", query);
+        assert_eq!("SELECT id, name FROM users LIMIT 15 OFFSET 30;", query);
     }
 
     #[test]
